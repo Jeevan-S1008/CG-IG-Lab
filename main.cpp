@@ -17,8 +17,8 @@ public:
         glColor3f(1.0f, 0.0f, 0.0f);
         glVertex2f(xPos, yPos);
         for (int i = 0; i <= 360; i++) {
-            glVertex2f(xPos + (radius * cos(i * 3.14159 / 180)),
-                       yPos + (radius * sin(i * 3.14159 / 180)));
+            float theta = i * 3.14159f / 180.0f;
+            glVertex2f(xPos + radius * cos(theta), yPos + radius * sin(theta));
         }
         glEnd();
     }
@@ -54,6 +54,13 @@ void renderScene() {
     ball.draw();
 }
 
+void checkOpenGLError() {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << err << std::endl;
+    }
+}
+
 int main() {
     // Initialize GLFW
     if (!glfwInit()) {
@@ -64,7 +71,7 @@ int main() {
     // Configure GLFW
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // Create a windowed mode window and its OpenGL context
@@ -104,6 +111,7 @@ int main() {
     glLoadIdentity();
     glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     // Time tracking
     GLfloat lastTime = glfwGetTime();
@@ -120,6 +128,7 @@ int main() {
         
         // Rendering
         renderScene();
+        checkOpenGLError();  // Check for errors after rendering
         ball.update(deltaTime);
 
         glfwSwapBuffers(window);
