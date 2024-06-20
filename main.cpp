@@ -9,18 +9,26 @@ const GLfloat BALL_RADIUS = 0.05f;
 
 class Ball {
 public:
-    Ball(GLfloat radius, GLfloat xPos, GLfloat yPos, GLfloat xVelocity, GLfloat yVelocity) :
-        radius(radius), xPos(xPos), yPos(yPos), xVelocity(xVelocity), yVelocity(yVelocity) {}
+    Ball(GLfloat radius, GLfloat xPos, GLfloat yPos, GLfloat xVelocity, GLfloat yVelocity)
+        : radius(radius), xPos(xPos), yPos(yPos), xVelocity(xVelocity), yVelocity(yVelocity),
+          scale(1.0f), rotation(0.0f) {}
 
     void draw() {
+        glPushMatrix();
+        glTranslatef(xPos, yPos, 0.0f);
+        glScalef(scale, scale, 1.0f);
+        glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
         glBegin(GL_TRIANGLE_FAN);
         glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex2f(xPos, yPos);
+        glVertex2f(0.0f, 0.0f);
         for (int i = 0; i <= 360; i++) {
             float theta = i * 3.14159f / 180.0f;
-            glVertex2f(xPos + radius * cos(theta), yPos + radius * sin(theta));
+            glVertex2f(radius * cos(theta), radius * sin(theta));
         }
         glEnd();
+
+        glPopMatrix();
     }
 
     void update(GLfloat deltaTime) {
@@ -29,16 +37,39 @@ public:
         yPos += yVelocity * deltaTime;
 
         // Collision detection with window boundaries
-        if (xPos + radius >= 1.0f || xPos - radius <= -1.0f) {
+        if (xPos + radius * scale >= 1.0f || xPos - radius * scale <= -1.0f) {
             xVelocity = -xVelocity;
         }
-        if (yPos + radius >= 1.0f || yPos - radius <= -1.0f) {
+        if (yPos + radius * scale >= 1.0f || yPos - radius * scale <= -1.0f) {
             yVelocity = -yVelocity;
         }
     }
 
+    void scaleUp() {
+        scale += 0.1f;
+    }
+
+    void scaleDown() {
+        if (scale > 0.1f) {
+            scale -= 0.1f;
+        }
+    }
+
+    void rotateLeft() {
+        rotation += 10.0f;
+    }
+
+    void rotateRight() {
+        rotation -= 10.0f;
+    }
+
+    void setPosition(float x, float y) {
+        xPos = x;
+        yPos = y;
+    }
+
 private:
-    GLfloat radius, xPos, yPos, xVelocity, yVelocity;
+    GLfloat radius, xPos, yPos, xVelocity, yVelocity, scale, rotation;
 };
 
 Ball ball(BALL_RADIUS, 0.0f, 0.0f, 0.2f, 0.2f);
@@ -46,6 +77,31 @@ Ball ball(BALL_RADIUS, 0.0f, 0.0f, 0.2f, 0.2f);
 void handleInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        ball.scaleUp();
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        ball.scaleDown();
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        ball.rotateLeft();
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        ball.rotateRight();
+    }
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        // Convert screen coordinates to OpenGL coordinates
+        xpos = (xpos / WIDTH) * 2 - 1;
+        ypos = 1 - (ypos / HEIGHT) * 2;
+
+        ball.setPosition(xpos, ypos);
     }
 }
 
@@ -116,6 +172,9 @@ int main() {
     // Time tracking
     GLfloat lastTime = glfwGetTime();
 
+    // Set mouse button callback
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Per-frame time logic
@@ -125,7 +184,7 @@ int main() {
 
         glfwPollEvents();
         handleInput(window);
-        
+
         // Rendering
         renderScene();
         checkOpenGLError();  // Check for errors after rendering
