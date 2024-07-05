@@ -89,7 +89,7 @@ for row in digits:
     row_digits = []
     for cell in row:
         cell = cv2.cvtColor(cell, cv2.COLOR_GRAY2BGR)
-        digit = pytesseract.image_to_string(cell, config='--psm 10 digits')
+        digit = pytesseract.image_to_string(cell, config='--psm 10 -c tessedit_char_whitelist=0123456789')
         row_digits.append(int(digit) if digit.isdigit() else 0)
     sudoku_grid.append(row_digits)
 
@@ -111,5 +111,15 @@ write_solution(result, sudoku_grid)
 
 # Show the solved Sudoku
 cv2.imshow('Solved Sudoku', result)
-cv2.waitKey(0)
+cv2.waitKey(100000)
 cv2.destroyAllWindows()
+
+cv2.imshow('Thresholded Image', thresh)
+cv2.waitKey(100000)
+cv2.destroyAllWindows()
+
+for row in digits:
+    for cell in row:
+        cell = cv2.cvtColor(cell, cv2.COLOR_GRAY2BGR)
+        digit = pytesseract.image_to_string(cell, config='--psm 10 -c tessedit_char_whitelist=0123456789')
+        print(digit)
