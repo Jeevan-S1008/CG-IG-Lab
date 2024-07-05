@@ -11,8 +11,7 @@ def extract_digits(image):
             x, y = j * 50, i * 50
             cell = image[y:y+50, x:x+50]
             cell = cv2.resize(cell, (28, 28))
-            cell = cell.astype('float32') / 255.0
-            cell = np.expand_dims(cell, axis=-1)
+            cell = cell.astype('uint8')  # Convert to uint8
             row.append(cell)
         cells.append(row)
     return cells
